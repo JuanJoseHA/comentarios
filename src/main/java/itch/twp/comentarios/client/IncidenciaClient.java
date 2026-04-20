@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import itch.twp.comentarios.dto.IncidenciaDTO;
 import java.util.List;
 
-@FeignClient(name = "servicio-incidencias", url = "http://192.168.212.117:8082")
+@FeignClient(name = "Incidencias", url = "http://192.168.212.117:8082", fallbackFactory = IncidenciaClientFallback.class)
 public interface IncidenciaClient {
 
     // 1. Crear el reporte

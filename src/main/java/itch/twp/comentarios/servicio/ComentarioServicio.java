@@ -10,12 +10,15 @@ public interface ComentarioServicio {
     
     ComentarioDto getComentarioById(Long id);
     
-    // Método específico para traer el historial de una incidencia
+
     List<ComentarioDto> getComentariosByIncidencia(Long incidenciaId);
     
     List<ComentarioDto> getAllComentarios();
     
     ComentarioDto updateComentario(Long id, ComentarioDto comentarioDto);
-    
+
     void deleteComentario(Long id);
+
+    itch.twp.comentarios.dto.IncidenciaDTO validarIncidencia(Integer id);
 }
+

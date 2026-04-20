@@ -16,7 +16,6 @@ public class IncidenciaDTO {
     private Integer tipoId;
     private LocalDateTime fechaReporte;
     
-    // IDs de otros microservicios
     private Integer usuarioId;
     private Integer ubicacionId;
     private Integer departamentoId;

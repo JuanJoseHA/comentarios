@@ -1,17 +1,27 @@
 package itch.twp.comentarios.controlador;
 
 
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import itch.twp.comentarios.dto.ComentarioDto;
+import itch.twp.comentarios.dto.IncidenciaDTO;
 import itch.twp.comentarios.servicio.ComentarioServicio;
 import lombok.AllArgsConstructor;
-import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/comentarios") // Ruta base definida en el API Gateway [cite: 106]
+@RequestMapping("/api/comentarios")
 public class ComentarioControlador {
 
     private ComentarioServicio comentarioServicio;
@@ -28,32 +38,40 @@ public class ComentarioControlador {
         return ResponseEntity.ok(comentarios);
     }
     
- // Obtener un Comentario por su ID
     @GetMapping("/{id}")
     public ResponseEntity<ComentarioDto> getComentarioById(@PathVariable("id") Long id) {
         ComentarioDto comentarioDto = comentarioServicio.getComentarioById(id);
         return ResponseEntity.ok(comentarioDto);
     }
 
-    // Obtener absolutamente todos los comentarios (opcional, para reportes generales)
     @GetMapping
     public ResponseEntity<List<ComentarioDto>> getAllComentarios() {
         List<ComentarioDto> comentarios = comentarioServicio.getAllComentarios();
         return ResponseEntity.ok(comentarios);
     }
 
-    // ELIMINAR un Comentario
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteComentario(@PathVariable("id") Long id) {
         comentarioServicio.deleteComentario(id);
         return ResponseEntity.ok("Comentario eliminado correctamente");
     }
     
- // ACTUALIZAR un Comentario
-    @PutMapping("/{id}")
-    public ResponseEntity<ComentarioDto> updateComentario(@PathVariable("id") Long id, 
+   @PutMapping("/{id}")
+   public ResponseEntity<ComentarioDto> updateComentario(@PathVariable("id") Long id,
                                                           @RequestBody ComentarioDto comentarioDto) {
-        ComentarioDto updatedComentario = comentarioServicio.updateComentario(id, comentarioDto);
-        return ResponseEntity.ok(updatedComentario);
-    }
+       ComentarioDto updatedComentario = comentarioServicio.updateComentario(id, comentarioDto);
+       return ResponseEntity.ok(updatedComentario);
+   }
+
+   @GetMapping("/test/incidencia/{id}")
+   public ResponseEntity<String> testIncidencia(@PathVariable Integer id) {
+       try {
+           IncidenciaDTO incidencia = comentarioServicio.validarIncidencia(id);
+           return ResponseEntity.ok("✅ Incidencia encontrada: ID=" + incidencia.getId() +
+                                  ", Título='" + incidencia.getTitulo() + "'" +
+                                  ", Estado='" + incidencia.getNombreEstadoActual() + "'");
+       } catch (Exception e) {
+           return ResponseEntity.badRequest().body("❌ Error al consumir incidencia: " + e.getMessage());
+       }
+   }
 }
