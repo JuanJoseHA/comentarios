@@ -28,10 +28,11 @@ public class ComentarioServicioImp implements ComentarioServicio {
 
     @Override
     public ComentarioDto createComentario(ComentarioDto comentarioDto) {
-        try {
-            incidenciaClient.obtenerPorId(comentarioDto.getIncidenciaId().intValue());
-        } catch (Exception e) {
-        }
+    	try {
+    	    incidenciaClient.obtenerPorId(comentarioDto.getIncidenciaId().intValue());
+    	} catch (Exception e) {
+    	    throw new ResourceNotFoundException("No se puede comentar: La incidencia no existe.");
+    	}
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String rol = authentication.getAuthorities().iterator().next().getAuthority();
