@@ -28,20 +28,28 @@ public class ComentarioServicioImp implements ComentarioServicio {
 
     @Override
     public ComentarioDto createComentario(ComentarioDto comentarioDto) {
-    	try {
-    	    incidenciaClient.obtenerPorId(comentarioDto.getIncidenciaId().intValue());
-    	} catch (Exception e) {
-    	    throw new ResourceNotFoundException("No se puede comentar: La incidencia no existe.");
-    	}
 
+        try {
+            incidenciaClient.obtenerPorId(comentarioDto.getIncidenciaId().intValue());
+        } catch (Exception e) {
+            throw new ResourceNotFoundException("No se puede comentar: La incidencia no existe.");
+        }
+
+        // Esta parte se mantiene igual porque la información viene de tu Token JWT (ya configurado)
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String rol = authentication.getAuthorities().iterator().next().getAuthority();
-        rol = rol.replace("ROLE_", "");
+        String rol = "";
+        
+        if (authentication != null && !authentication.getAuthorities().isEmpty()) {
+            rol = authentication.getAuthorities().iterator().next().getAuthority();
+            rol = rol.replace("ROLE_", "");
+        }
+
+        // Como en jwt.io pusimos "rol": "FUNCIONARIO", esOficial será true automáticamente
         boolean esOficial = "EMPLEADO".equals(rol) || "ADMIN".equals(rol) || "FUNCIONARIO".equals(rol);
 
         Comentario comentario = new Comentario();
         comentario.setIncidenciaId(comentarioDto.getIncidenciaId());
-        comentario.setUsuarioId(comentarioDto.getUsuarioId());
+        comentario.setUsuarioId(comentarioDto.getUsuarioId()); // Se usará el '7' que pusimos en React
         comentario.setMensaje(comentarioDto.getMensaje());
         comentario.setEsOficial(esOficial);
 

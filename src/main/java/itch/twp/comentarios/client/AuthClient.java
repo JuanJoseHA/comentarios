@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import itch.twp.comentarios.dto.UsuarioDetalleDTO;
 
 
-@FeignClient(name = "SERVICIO-AUTH", url = "http://192.168.210.229:8088")
+@FeignClient(name = "SERVICIO-AUTH", url = "http://26.87.230.97:8088")
 public interface AuthClient {
 
     @GetMapping("/api/auth/usuario/{id}")
