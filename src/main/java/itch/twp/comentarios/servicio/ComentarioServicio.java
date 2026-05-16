@@ -10,6 +10,9 @@ public interface ComentarioServicio {
     
     ComentarioDto getComentarioById(Long id);
     
+    void marcarComoLeidosPorCiudadano(Long incidenciaId);
+
+    void marcarComoLeidosPorFuncionario(Long incidenciaId);
 
     List<ComentarioDto> getComentariosByIncidencia(Long incidenciaId);
     
@@ -20,5 +23,7 @@ public interface ComentarioServicio {
     void deleteComentario(Long id);
 
     itch.twp.comentarios.dto.IncidenciaDTO validarIncidencia(Integer id);
+    
+    String probarConexiones(Integer incidenciaId, Long usuarioId);
 }
 

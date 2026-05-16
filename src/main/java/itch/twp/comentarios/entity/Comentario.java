@@ -34,6 +34,12 @@ public class Comentario {
     @Column(name = "es_oficial")
     private Boolean esOficial;
     
+    @Column(name = "leido_ciudadano", nullable = false)
+    private Boolean leidoCiudadano = false;
+
+    @Column(name = "leido_funcionario", nullable = false)
+    private Boolean leidoFuncionario = false;
+    
     @PrePersist
     protected void onCreate() {
         fechaCreacion = LocalDateTime.now();

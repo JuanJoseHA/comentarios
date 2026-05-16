@@ -28,34 +28,46 @@ public class ComentarioServicioImp implements ComentarioServicio {
 
     @Override
     public ComentarioDto createComentario(ComentarioDto comentarioDto) {
-
+        // PRIMERA VALIDACIÓN: ¿Existe la incidencia?
         try {
             incidenciaClient.obtenerPorId(comentarioDto.getIncidenciaId().intValue());
         } catch (Exception e) {
-            throw new ResourceNotFoundException("No se puede comentar: La incidencia no existe.");
+            throw new ResourceNotFoundException("Error: La incidencia " + comentarioDto.getIncidenciaId() + " no existe.");
         }
 
-        // Esta parte se mantiene igual porque la información viene de tu Token JWT (ya configurado)
+        // SEGUNDA VALIDACIÓN: ¿Existe el usuario en el servicio de Uri/Kevin?
+        try {
+            // Llamada al microservicio de Uri para verificar existencia
+            authClient.obtenerUsuarioPorId(comentarioDto.getUsuarioId());
+        } catch (Exception e) {
+            // Si el usuario no existe en el Auth, lanzamos la excepción AQUÍ
+            // Esto evita que el código llegue al 'save' de abajo
+            throw new ResourceNotFoundException("Error: El usuario " + comentarioDto.getUsuarioId() + " no es válido.");
+        }
+
+        // Si ambas validaciones pasan, procedemos con la lógica de roles
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String rol = "";
-        
-        if (authentication != null && !authentication.getAuthorities().isEmpty()) {
-            rol = authentication.getAuthorities().iterator().next().getAuthority();
-            rol = rol.replace("ROLE_", "");
-        }
+        String rol = (authentication != null && !authentication.getAuthorities().isEmpty()) 
+                     ? authentication.getAuthorities().iterator().next().getAuthority().replace("ROLE_", "") 
+                     : "";
 
-        // Como en jwt.io pusimos "rol": "FUNCIONARIO", esOficial será true automáticamente
         boolean esOficial = "EMPLEADO".equals(rol) || "ADMIN".equals(rol) || "FUNCIONARIO".equals(rol);
 
         Comentario comentario = new Comentario();
         comentario.setIncidenciaId(comentarioDto.getIncidenciaId());
-        comentario.setUsuarioId(comentarioDto.getUsuarioId()); // Se usará el '7' que pusimos en React
+        comentario.setUsuarioId(comentarioDto.getUsuarioId());
         comentario.setMensaje(comentarioDto.getMensaje());
         comentario.setEsOficial(esOficial);
+        
+        if (esOficial) {
+            comentario.setLeidoFuncionario(true);
+            comentario.setLeidoCiudadano(false);
+        } else {
+            comentario.setLeidoCiudadano(true);
+            comentario.setLeidoFuncionario(false);
+        }
 
-        Comentario savedComentario = comentarioRepositorio.save(comentario);
-
-        return mapToDto(savedComentario);
+        return mapToDto(comentarioRepositorio.save(comentario));
     }
 
     @Override
@@ -99,8 +111,32 @@ public class ComentarioServicioImp implements ComentarioServicio {
                 comentario.getUsuarioId(),
                 comentario.getMensaje(),
                 comentario.getFechaCreacion(),
-                comentario.getEsOficial()
+                comentario.getEsOficial(),
+                comentario.getLeidoCiudadano(),
+                comentario.getLeidoFuncionario()
         );
+    }
+    
+    @Override
+    public void marcarComoLeidosPorCiudadano(Long incidenciaId) {
+        List<Comentario> comentarios = comentarioRepositorio.findByIncidenciaIdOrderByFechaCreacionAsc(incidenciaId);
+
+        comentarios.stream()
+                .filter(comentario -> Boolean.TRUE.equals(comentario.getEsOficial()))
+                .forEach(comentario -> comentario.setLeidoCiudadano(true));
+
+        comentarioRepositorio.saveAll(comentarios);
+    }
+
+    @Override
+    public void marcarComoLeidosPorFuncionario(Long incidenciaId) {
+        List<Comentario> comentarios = comentarioRepositorio.findByIncidenciaIdOrderByFechaCreacionAsc(incidenciaId);
+
+        comentarios.stream()
+                .filter(comentario -> !Boolean.TRUE.equals(comentario.getEsOficial()))
+                .forEach(comentario -> comentario.setLeidoFuncionario(true));
+
+        comentarioRepositorio.saveAll(comentarios);
     }
     
     @Override
@@ -118,5 +154,28 @@ public class ComentarioServicioImp implements ComentarioServicio {
     @Override
     public itch.twp.comentarios.dto.IncidenciaDTO validarIncidencia(Integer id) {
         return incidenciaClient.obtenerPorId(id);
+    }
+    
+    @Override
+    public String probarConexiones(Integer incidenciaId, Long usuarioId) {
+        StringBuilder reporte = new StringBuilder();
+
+        // Prueba 1: Incidencias (Kevin)
+        try {
+            incidenciaClient.obtenerPorId(incidenciaId);
+            reporte.append("✅ Conexión con Incidencias (Kevin) OK\n");
+        } catch (Exception e) {
+            reporte.append("❌ Error en Incidencias: ").append(e.getMessage()).append("\n");
+        }
+
+        // Prueba 2: Auth (Uri)
+        try {
+            authClient.obtenerUsuarioPorId(usuarioId);
+            reporte.append("✅ Conexión con Auth (Uri) OK");
+        } catch (Exception e) {
+            reporte.append("❌ Error en Auth (Uri): ").append(e.getMessage());
+        }
+
+        return reporte.toString();
     }
 }

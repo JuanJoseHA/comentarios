@@ -19,4 +19,6 @@ public class ComentarioDto {
     private String mensaje;
     private LocalDateTime fechaCreacion;
     private Boolean esOficial;
+    private Boolean leidoCiudadano;
+    private Boolean leidoFuncionario;
 }
